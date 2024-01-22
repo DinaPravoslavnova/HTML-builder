@@ -4,9 +4,12 @@ const path = require('path');
 const distPath = path.join(__dirname, 'project-dist');
 const distAssetsPath = path.join(distPath, 'assets');
 const distStylePath = path.join(distPath, 'style.css');
+const distIndexPath = path.join(distPath, 'index.html');
 
 const assetsPath = path.join(__dirname, 'assets');
 const stylesPath = path.join(__dirname, 'styles');
+const templatePath = path.join(__dirname, 'template.html');
+const componentsPath = path.join(__dirname, 'components');
 
 const options = {
   rm: {
@@ -19,7 +22,7 @@ const options = {
   readdir: {
     withFileTypes: true,
   },
-  readStream: {
+  encoding: {
     encoding: 'utf8',
   },
 };
@@ -58,12 +61,33 @@ fs.rm(distPath, options.rm, (_error) => {
         if (isCSS) {
           const styleReadStream = fs.createReadStream(
             path.join(stylesPath, file),
-            options.readStream,
+            options.encoding,
           );
           styleReadStream.pipe(styleWriteStream);
         }
       });
     });
 
+    fs.readFile(templatePath, options.encoding, (_error, data) => {
+      let indexHTML = data;
+      fs.readdir(componentsPath, options.readdir, (_error, components) => {
+        components.forEach((component) => {
+          fs.readFile(
+            path.join(componentsPath, component.name),
+            options.encoding,
+            (_error, componentHTML) => {
+              const componentName = component.name.split('.')[0];
+              indexHTML = indexHTML.replace(
+                `{{${componentName}}}`,
+                componentHTML,
+              );
+
+              const indexWriteStream = fs.createWriteStream(distIndexPath);
+              indexWriteStream.write(indexHTML);
+            },
+          );
+        });
+      });
+    });
   });
 });
