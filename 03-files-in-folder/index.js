@@ -11,8 +11,10 @@ fs.readdir(secretFolderPath, options, (_error, files) => {
     if (file.isFile()) {
       const currentPath = path.join(secretFolderPath, file.name);
       fs.stat(currentPath, (_error, stats) => {
-        const [fileName, fileExtension] = file.name.split('.');
-        const fileInfo = `${fileName} - ${fileExtension} - ${stats.size} bytes\n`;
+        const fileName = path.parse(file.name).name;
+        const fileExtension = path.parse(file.name).ext.slice(1);
+        const fileSize = stats.size;               
+        const fileInfo = `${fileName} - ${fileExtension} - ${fileSize} bytes\n`;
         stdout.write(fileInfo);
       });
     }
